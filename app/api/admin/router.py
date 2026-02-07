@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 
 from app.api.auth.dependencies import admin_required, get_db
 from app.schemas.product import ProductCreate, ProductResponse
+from app.schemas.admin_pricing import MaterialCreate, ExtraCreate
 from app.services.product_service import create_product, delete_product
 from app.services.order_service import get_all_orders, update_order_status
-from app.schemas.admin_pricing import MaterialCreate, ExtraCreate
 from app.services.admin_pricing_service import add_material, add_extra
-from app.models.material import Material
+from app.models.pricing import MaterialRate, ExtraRate
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -48,8 +48,8 @@ def remove_product(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
-# ---------- ORDER MANAGEMENT ----------
 
+# ---------- ORDER MANAGEMENT ----------
 @router.get("/orders")
 def all_orders(
     db: Session = Depends(get_db),
@@ -70,6 +70,8 @@ def change_order_status(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
+
+# ---------- PRICING MANAGEMENT ----------
 @router.post("/materials")
 def create_material(
     data: MaterialCreate,
@@ -77,6 +79,14 @@ def create_material(
     user=Depends(admin_required),
 ):
     return add_material(db, data.name, data.rate_per_sqft)
+
+
+@router.get("/materials")
+def list_materials(
+    db: Session = Depends(get_db),
+    user=Depends(admin_required),
+):
+    return db.query(MaterialRate).all()
 
 
 @router.post("/extras")
@@ -87,9 +97,10 @@ def create_extra(
 ):
     return add_extra(db, data.name, data.price)
 
-@router.get("/materials")
-def list_materials(
+
+@router.get("/extras")
+def list_extras(
     db: Session = Depends(get_db),
     user=Depends(admin_required),
 ):
-    return db.query(Material).all()
+    return db.query(ExtraRate).all()

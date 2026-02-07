@@ -1,47 +1,29 @@
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException
-
 from app.models.pricing import MaterialRate, ExtraRate
+from fastapi import HTTPException
 
 
 def add_material(db: Session, name: str, rate: float):
-    material = MaterialRate(
-        name=name.lower().strip(),
-        rate_per_sqft=rate
-    )
+    name = name.lower()
 
+    if db.query(MaterialRate).filter(MaterialRate.name == name).first():
+        raise HTTPException(status_code=400, detail=f"Material '{name}' already exists")
+
+    material = MaterialRate(name=name, rate_per_sqft=rate)
     db.add(material)
-
-    try:
-        db.commit()
-        db.refresh(material)
-        return material
-
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=400,
-            detail=f"Material '{name}' already exists"
-        )
+    db.commit()
+    db.refresh(material)
+    return material
 
 
 def add_extra(db: Session, name: str, price: float):
-    extra = ExtraRate(
-        name=name.lower().strip(),
-        price=price
-    )
+    name = name.lower()
 
+    if db.query(ExtraRate).filter(ExtraRate.name == name).first():
+        raise HTTPException(status_code=400, detail=f"Extra '{name}' already exists")
+
+    extra = ExtraRate(name=name, price=price)
     db.add(extra)
-
-    try:
-        db.commit()
-        db.refresh(extra)
-        return extra
-
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=400,
-            detail=f"Extra '{name}' already exists"
-        )
+    db.commit()
+    db.refresh(extra)
+    return extra
