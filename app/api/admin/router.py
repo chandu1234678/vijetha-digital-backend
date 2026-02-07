@@ -104,3 +104,30 @@ def list_extras(
     user=Depends(admin_required),
 ):
     return db.query(ExtraRate).all()
+
+@router.delete("/materials/{material_id}")
+def delete_material(
+    material_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(admin_required),
+):
+    material = db.query(MaterialRate).get(material_id)
+    if not material:
+        raise HTTPException(status_code=404, detail="Material not found")
+    db.delete(material)
+    db.commit()
+    return {"message": "Deleted"}
+
+
+@router.delete("/extras/{extra_id}")
+def delete_extra(
+    extra_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(admin_required),
+):
+    extra = db.query(ExtraRate).get(extra_id)
+    if not extra:
+        raise HTTPException(status_code=404, detail="Extra not found")
+    db.delete(extra)
+    db.commit()
+    return {"message": "Deleted"}

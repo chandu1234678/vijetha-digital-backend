@@ -1,29 +1,31 @@
-import { createContext, useContext, useState } from 'react';
-import toast from 'react-hot-toast';
+import { createContext, useContext, useState } from "react";
 
-const CartContext = createContext();
+const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([]);
 
   const addToCart = (item) => {
     setItems((prev) => [...prev, item]);
-    toast.success('Item added to cart');
   };
 
   const removeFromCart = (index) => {
     setItems((prev) => prev.filter((_, i) => i !== index));
-    toast.success('Item removed from cart');
   };
 
   const clearCart = () => {
     setItems([]);
   };
 
-  const total = items.reduce((sum, item) => sum + item.total_price, 0);
-
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, total }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addToCart,
+        removeFromCart,
+        clearCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

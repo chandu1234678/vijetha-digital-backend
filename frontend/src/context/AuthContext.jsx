@@ -1,70 +1,44 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import { login as loginApi } from '../api/auth';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { createContext, useContext, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import { login as loginApi } from "../api/auth";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setUser({
-          email: decoded.sub,
-          role: decoded.role
-        });
-      } catch (error) {
-        localStorage.removeItem('token');
-        setUser(null);
+        setUser(decoded);
+      } catch {
+        localStorage.removeItem("token");
       }
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    try {
-      const response = await loginApi(email, password);
-      const token = response.access_token;
-      localStorage.setItem('token', token);
-      
-      const decoded = jwtDecode(token);
-      const userData = {
-        email: decoded.sub,
-        role: decoded.role
-      };
-      
-      setUser(userData);
-      toast.success('Logged in successfully');
-      
-      if (userData.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
-      return true;
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Login failed');
-      return false;
-    }
+    const data = await loginApi(email, password);
+    localStorage.setItem("token", data.access_token);
+
+    const decoded = jwtDecode(data.access_token);
+    setUser(decoded);
+
+    return decoded; // ⭐ THIS IS THE KEY LINE
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setUser(null);
-    navigate('/login');
-    toast.success('Logged out successfully');
   };
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

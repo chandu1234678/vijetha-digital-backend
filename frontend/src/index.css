@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global defaults — plain CSS only */
 body {
-  @apply bg-slate-50 text-slate-900;
+  background-color: #f1f5f9; /* slate-100 */
+  color: #0f172a;           /* slate-900 */
 }
