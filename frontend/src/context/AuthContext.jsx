@@ -1,46 +1,100 @@
+// src/context/AuthContext.jsx
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
-import { login as loginApi } from "../api/auth";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
+  // ======================
+  // Restore session
+  // ======================
   useEffect(() => {
+    // enforce single token key
+    localStorage.removeItem("access_token");
+
     const token = localStorage.getItem("token");
+
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        setUser(decoded);
+        setUser({
+          email: decoded.sub,
+          role: decoded.role,
+        });
       } catch {
         localStorage.removeItem("token");
+        setUser(null);
       }
     }
+
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    const data = await loginApi(email, password);
-    localStorage.setItem("token", data.access_token);
+  // ======================
+  // Login (intent-aware)
+  // ======================
+  const login = async (email, password, redirectTo = "/") => {
+    const res = await api.post("/auth/login", { email, password });
 
-    const decoded = jwtDecode(data.access_token);
-    setUser(decoded);
+    const token = res.data.access_token;
+    localStorage.setItem("token", token);
 
-    return decoded; // ⭐ THIS IS THE KEY LINE
+    const decoded = jwtDecode(token);
+
+    const userData = {
+      email: decoded.sub,
+      role: decoded.role,
+    };
+
+    setUser(userData);
+
+    // admin NEVER resumes customer flow
+    if (userData.role === "admin") {
+      navigate("/admin/dashboard", { replace: true });
+    } else {
+      navigate(redirectTo, { replace: true });
+    }
   };
 
+  // ======================
+  // Logout
+  // ======================
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
+    navigate("/login", { replace: true });
+  };
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    isAuthenticated: Boolean(user),
+    isAdmin: user?.role === "admin",
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => useContext(AuthContext);
+// ======================
+// Hook
+// ======================
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
+  return context;
+}

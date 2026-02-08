@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.auth.dependencies import admin_required, get_db
+from app.api.auth.dependencies import admin_required
+from app.db.session import get_db
 from app.schemas.product import ProductCreate, ProductResponse
 from app.schemas.admin_pricing import MaterialCreate, ExtraCreate
 from app.services.product_service import create_product, delete_product

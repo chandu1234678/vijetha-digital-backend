@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 
 class OrderItemCreate(BaseModel):
@@ -23,12 +23,15 @@ class OrderItemResponse(BaseModel):
     unit_price: float
     total_price: float
 
+    class Config:
+        from_attributes = True
+
 
 class OrderResponse(BaseModel):
     id: int
     user_email: str
-    total_price: float
     status: str
+    total_price: float
     items: List[OrderItemResponse]
 
     class Config:

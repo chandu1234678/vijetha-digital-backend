@@ -1,80 +1,51 @@
+// src/pages/Login.jsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const Login = () => {
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+
+  const { login } = useAuth();
+  const location = useLocation();
+
+  // where the user wanted to go before login
+  const redirectTo = location.state?.from || "/";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
     try {
-      // login() now RETURNS the decoded user
-      const user = await login(email, password);
-
-      // role-based redirect
-      if (user.role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/");
-      }
-    } catch (err) {
-      setError("Invalid email or password");
-    } finally {
-      setLoading(false);
+      await login(email, password, redirectTo);
+    } catch {
+      alert("Invalid login");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow-md w-80"
-      >
-        <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
+    <div className="p-10 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Login</h1>
 
-        {error && (
-          <p className="text-red-600 text-sm mb-3 text-center">{error}</p>
-        )}
-
+      <form onSubmit={handleSubmit} className="space-y-3">
         <input
-          type="email"
+          className="border p-2 w-full"
           placeholder="Email"
-          className="border p-2 w-full mb-3"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
-          disabled={loading}
         />
 
         <input
+          className="border p-2 w-full"
           type="password"
           placeholder="Password"
-          className="border p-2 w-full mb-4"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
-          disabled={loading}
         />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-indigo-600 text-white w-full py-2 rounded hover:bg-indigo-700 disabled:opacity-60"
-        >
-          {loading ? "Logging in..." : "Login"}
+        <button className="bg-black text-white px-4 py-2 w-full">
+          Login
         </button>
       </form>
     </div>
   );
-};
-
-export default Login;
+}
