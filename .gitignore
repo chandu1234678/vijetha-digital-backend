@@ -23,6 +23,21 @@ venv/
 .mypy_cache/
 
 # =========================
+# Logs & Runtime Artifacts
+# =========================
+*.log
+backend.log
+backend_restart.log
+frontend.log
+
+# =========================
+# Local Databases
+# =========================
+test.db
+*.sqlite
+*.sqlite3
+
+# =========================
 # OS / Editor
 # =========================
 .DS_Store
