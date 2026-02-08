@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.schemas.pricing import PriceRequest, PriceResponse
 from app.services.pricing_service import calculate_price
-from app.api.auth.dependencies import get_db
+from app.db.session import get_db
 
 router = APIRouter(prefix="/pricing", tags=["pricing"])
 

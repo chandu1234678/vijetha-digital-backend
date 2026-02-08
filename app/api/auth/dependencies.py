@@ -1,8 +1,9 @@
+# app/api/auth/dependencies.py
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.security import decode_access_token
-from app.db.session import SessionLocal 
 
 security = HTTPBearer()
 
@@ -30,10 +31,3 @@ def admin_required(user=Depends(get_current_user)):
         )
 
     return user
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()

@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.schemas.order import OrderCreate, OrderResponse
 from app.services.order_service import create_order, get_user_orders
 from app.services.upload_service import upload_file
-from app.api.auth.dependencies import get_current_user, get_db
+from app.api.auth.dependencies import get_current_user
+from app.db.session import get_db
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
