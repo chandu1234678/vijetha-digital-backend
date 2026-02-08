@@ -1,16 +1,29 @@
-# Node
+# =========================
+# Node / Frontend
+# =========================
 node_modules/
 dist/
 
-# Python
+# =========================
+# Python / Backend
+# =========================
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.env
 venv/
+.venv/
+.env
 .env.*
 
+# =========================
+# Python tooling
+# =========================
+.pytest_cache/
+.mypy_cache/
+
+# =========================
 # OS / Editor
+# =========================
 .DS_Store
 .vscode/
