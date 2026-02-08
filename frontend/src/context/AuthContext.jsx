@@ -9,13 +9,13 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("access_token");
     if (token) {
       try {
         const decoded = jwtDecode(token);
         setUser(decoded);
       } catch {
-        localStorage.removeItem("token");
+        localStorage.removeItem("access_token");
       }
     }
     setLoading(false);
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const data = await loginApi(email, password);
-    localStorage.setItem("token", data.access_token);
+    localStorage.setItem("access_token", data.access_token);
 
     const decoded = jwtDecode(data.access_token);
     setUser(decoded);
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
     setUser(null);
   };
 

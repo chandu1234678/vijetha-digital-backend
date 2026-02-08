@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { getMaterials, createMaterial } from "../api/admin";
+import { getMaterials, createMaterial, deleteMaterial } from "../api/admin";
 import toast from "react-hot-toast";
+import { Trash2 } from "lucide-react";
 
 const MaterialsSection = () => {
   const [materials, setMaterials] = useState([]);
@@ -37,6 +38,17 @@ const MaterialsSection = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure?")) return;
+    try {
+      await deleteMaterial(id);
+      toast.success("Material deleted");
+      loadMaterials();
+    } catch {
+      toast.error("Failed to delete material");
+    }
+  };
+
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Materials</h2>
@@ -66,8 +78,14 @@ const MaterialsSection = () => {
 
       <ul className="space-y-2">
         {materials.map((m) => (
-          <li key={m.id} className="border p-2 rounded">
-            {m.name} — ₹{m.rate_per_sqft}
+          <li key={m.id} className="border p-2 rounded flex justify-between items-center">
+            <span>{m.name} — ₹{m.rate_per_sqft}</span>
+            <button
+              onClick={() => handleDelete(m.id)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <Trash2 size={20} />
+            </button>
           </li>
         ))}
       </ul>

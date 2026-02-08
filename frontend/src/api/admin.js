@@ -1,25 +1,13 @@
-import axios from "axios";
-
-const API = axios.create({
-  baseURL: "http://localhost:8000",
-});
-
-API.interceptors.request.use(config => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api from "./axios";
 
 // -------- ORDERS --------
 export const getOrders = async () => {
-  const res = await API.get("/admin/orders");
+  const res = await api.get("/admin/orders");
   return res.data;
 };
 
 export const updateOrderStatus = async (orderId, status) => {
-  const res = await API.patch(
+  const res = await api.patch(
     `/admin/orders/${orderId}`,
     null, // IMPORTANT: no body
     { params: { status } } // 👈 THIS is what FastAPI wants
@@ -29,29 +17,29 @@ export const updateOrderStatus = async (orderId, status) => {
 
 // -------- PRICING --------
 export const getMaterials = async () => {
-  const res = await API.get("/admin/materials");
+  const res = await api.get("/admin/materials");
   return res.data;
 };
 
 export const createMaterial = async (data) => {
-  const res = await API.post("/admin/materials", data);
+  const res = await api.post("/admin/materials", data);
   return res.data;
 };
 
 export const deleteMaterial = async (id) => {
-  await API.delete(`/admin/materials/${id}`);
+  await api.delete(`/admin/materials/${id}`);
 };
 
 export const getExtras = async () => {
-  const res = await API.get("/admin/extras");
+  const res = await api.get("/admin/extras");
   return res.data;
 };
 
 export const createExtra = async (data) => {
-  const res = await API.post("/admin/extras", data);
+  const res = await api.post("/admin/extras", data);
   return res.data;
 };
 
 export const deleteExtra = async (id) => {
-  await API.delete(`/admin/extras/${id}`);
+  await api.delete(`/admin/extras/${id}`);
 };
