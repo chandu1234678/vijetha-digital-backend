@@ -1,31 +1,16 @@
-# ===============================
+# Node
+node_modules/
+dist/
+
 # Python
-# ===============================
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
-*.pyc
-
-# ===============================
-# Virtual Environment
-# ===============================
-venv/
-.env/
-.env.*
-!.env.example
-
-# ===============================
-# Environment & Secrets
-# ===============================
-*.env
 .env
-.env.local
-.env.production
-.env.development
+venv/
+.env.*
 
-# ===============================
-# Database
-# ===============================
-*.db
-*.
+# OS / Editor
+.DS_Store
+.vscode/
