@@ -42,3 +42,11 @@ test.db
 # =========================
 .DS_Store
 .vscode/
+
+# =========================
+# Logs
+# =========================
+backend.log
+frontend.log
+backend_restart.log
+test.db
