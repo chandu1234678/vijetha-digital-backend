@@ -1,94 +1,160 @@
-// src/pages/ProductDetail.jsx
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import { getProducts } from "../api/products";
 import { calculatePrice } from "../api/pricing";
 
+import Container from "../components/layout/Container";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import Select from "../components/ui/Select";
+
 import ImageGallery from "../components/product/ImageGallery";
-import ProductInfo from "../components/product/ProductInfo";
-import CustomisationForm from "../components/product/CustomisationForm";
-import OrderSummary from "../components/product/OrderSummary";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { user } = useAuth();
 
   const [product, setProduct] = useState(null);
+  const [price, setPrice] = useState(0);
+  const [loadingPrice, setLoadingPrice] = useState(false);
+
   const [config, setConfig] = useState({
     width: "",
     height: "",
     material: "flex",
     quantity: 1,
-    lamination: false,
-    frame: false,
   });
 
-  const [price, setPrice] = useState(0);
-  const [loadingPrice, setLoadingPrice] = useState(false);
-
-  // Load product
   useEffect(() => {
     getProducts().then((list) => {
-      const found = list.find((p) => String(p.id) === id);
+      const found = list.find((p) => String(p.id) === String(id));
       setProduct(found || null);
     });
   }, [id]);
 
-  // Calculate price whenever config changes
   useEffect(() => {
-    const { width, height, material, quantity } = config;
+    const width = Number(config.width);
+    const height = Number(config.height);
+    const quantity = Number(config.quantity);
 
-    if (!width || !height || !material || !quantity) {
+    if (!width || !height || quantity < 1) {
       setPrice(0);
       return;
     }
 
-    const payload = {
-      width_ft: Number(width) / 12,
-      height_ft: Number(height) / 12,
-      material,
-      quantity: Number(quantity),
-      lamination: false,
-      frame: false,
-    };
-
     setLoadingPrice(true);
 
-    calculatePrice(payload)
-      .then((res) => {
-        setPrice(res.total_price);
-      })
-      .catch((err) => {
-        console.error("Pricing error", err);
-        setPrice(0);
-      })
+    calculatePrice({
+      width_ft: width / 12,
+      height_ft: height / 12,
+      material: config.material,
+      quantity,
+    })
+      .then((res) => setPrice(Number(res.total_price)))
+      .catch(() => setPrice(0))
       .finally(() => setLoadingPrice(false));
   }, [config]);
 
-  if (!product) {
-    return <p className="p-6">Loading product...</p>;
-  }
+  if (!product) return <p className="p-6">Loading product…</p>;
+
+  const handleAddToCart = () => {
+    if (!user) return navigate("/login");
+    if (price <= 0) return alert("Invalid size");
+
+    addToCart({
+      product_id: product.id,
+      name: product.name,
+      category: product.category,
+      unit_price: price,
+      quantity: Number(config.quantity),
+      config: {
+        width: Number(config.width),
+        height: Number(config.height),
+        material: config.material,
+      },
+    });
+
+    navigate("/cart");
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-8">
-      <ImageGallery />
-
-      <div className="space-y-6">
-        <ProductInfo
-          name={product.name}
-          description={product.category}
-        />
-
-        <CustomisationForm
-          config={config}
-          setConfig={setConfig}
-        />
-
-        <OrderSummary
-          config={config}
-          price={loadingPrice ? "Calculating..." : price}
-        />
+    <Container>
+      <div className="py-6 text-sm text-gray-500">
+        Home / Products / {product.name}
       </div>
-    </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <ImageGallery />
+
+        <div className="space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold">{product.name}</h1>
+            <p className="text-gray-600">{product.category}</p>
+          </div>
+
+          <Card>
+            <h2 className="font-semibold mb-4">Customise</h2>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Width (inches)"
+                type="number"
+                value={config.width}
+                onChange={(e) =>
+                  setConfig({ ...config, width: e.target.value })
+                }
+              />
+              <Input
+                label="Height (inches)"
+                type="number"
+                value={config.height}
+                onChange={(e) =>
+                  setConfig({ ...config, height: e.target.value })
+                }
+              />
+            </div>
+
+            <Select
+              label="Material"
+              value={config.material}
+              onChange={(e) =>
+                setConfig({ ...config, material: e.target.value })
+              }
+              options={[
+                { label: "Flex", value: "flex" },
+                { label: "Star Flex", value: "star_flex" },
+                { label: "Eco Flex", value: "eco_flex" },
+              ]}
+            />
+
+            <Input
+              label="Quantity"
+              type="number"
+              value={config.quantity}
+              onChange={(e) =>
+                setConfig({ ...config, quantity: e.target.value })
+              }
+            />
+          </Card>
+
+          <Card>
+            <p className="text-sm text-gray-500">Estimated Price</p>
+            <p className="text-3xl font-bold">
+              ₹ {loadingPrice ? "…" : price}
+            </p>
+
+            <Button className="w-full mt-4" onClick={handleAddToCart}>
+              Add to Cart
+            </Button>
+          </Card>
+        </div>
+      </div>
+    </Container>
   );
 }

@@ -1,53 +1,50 @@
-// src/pages/Orders.jsx
 import { useEffect, useState } from "react";
+import Container from "../components/layout/Container";
+import Card from "../components/ui/Card";
 import { getMyOrders } from "../api/orders";
+import { useAuth } from "../context/AuthContext";
 
 export default function Orders() {
+  const { user, loading } = useAuth();
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
+
     getMyOrders()
       .then(setOrders)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => setLoadingOrders(false));
+  }, [user]);
 
-  if (loading) {
+  if (loading || loadingOrders) {
+    return <p className="p-6">Loading orders…</p>;
+  }
+
+  if (orders.length === 0) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">My Orders</h1>
-        <p>Loading orders...</p>
-      </div>
+      <Container>
+        <p className="p-6">No orders found.</p>
+      </Container>
     );
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">My Orders</h1>
+    <Container>
+      <div className="py-12 space-y-6">
+        <h1 className="text-3xl font-bold">My Orders</h1>
 
-      {orders.length === 0 ? (
-        <p>No orders found.</p>
-      ) : (
-        <table className="w-full border">
-          <thead>
-            <tr className="border-b bg-gray-100">
-              <th className="p-2 text-left">Order ID</th>
-              <th className="p-2 text-left">Status</th>
-              <th className="p-2 text-left">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((o) => (
-              <tr key={o.id} className="border-b">
-                <td className="p-2">{o.id}</td>
-                <td className="p-2">{o.status}</td>
-                <td className="p-2">₹ {o.total_price}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+        {orders.map((order) => (
+          <Card key={order.id}>
+            <p className="font-semibold">
+              Order #{order.id}
+            </p>
+            <p className="text-sm text-gray-600">
+              Total: ₹ {order.total}
+            </p>
+          </Card>
+        ))}
+      </div>
+    </Container>
   );
 }

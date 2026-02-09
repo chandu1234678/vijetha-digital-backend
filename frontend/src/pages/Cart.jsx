@@ -1,85 +1,66 @@
-// src/pages/Cart.jsx
-
+import Container from "../components/layout/Container";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Cart() {
-  const {
-    items,
-    updateQuantity,
-    removeFromCart,
-    total,
-  } = useCart();
-
+  const { items, cartLoaded, removeFromCart, total } = useCart();
   const navigate = useNavigate();
+
+  if (!cartLoaded) return <p className="p-6">Loading cart…</p>;
 
   if (items.length === 0) {
     return (
-      <div className="p-10">
-        <h1 className="text-2xl font-bold">Your cart is empty</h1>
-      </div>
+      <Container>
+        <h1 className="text-2xl font-bold py-12">Your cart is empty</h1>
+        <Button onClick={() => navigate("/products")}>Browse Products</Button>
+      </Container>
     );
   }
 
   return (
-    <div className="p-10 max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Your Cart</h1>
+    <Container>
+      <div className="py-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          {items.map((item, i) => (
+            <Card key={i}>
+              <div className="flex justify-between">
+                <div>
+                  <p className="font-semibold">{item.name}</p>
+                  <p className="text-sm text-gray-600">
+                    {item.config.width}" × {item.config.height}" ·{" "}
+                    {item.config.material}
+                  </p>
+                  <p className="text-sm">Qty: {item.quantity}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold">
+                    ₹ {item.unit_price * item.quantity}
+                  </p>
+                  <button
+                    className="text-red-600 text-sm"
+                    onClick={() => removeFromCart(i)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
 
-      {items.map((item, index) => (
-        <div key={index} className="border p-4 rounded space-y-2">
-          <p>
-            Size: {item.config.width} × {item.config.height} inches
-          </p>
-          <p>Material: {item.config.material}</p>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() =>
-                updateQuantity(index, item.quantity - 1)
-              }
-              className="border px-2"
-            >
-              -
-            </button>
-
-            <span>{item.quantity}</span>
-
-            <button
-              onClick={() =>
-                updateQuantity(index, item.quantity + 1)
-              }
-              className="border px-2"
-            >
-              +
-            </button>
-
-            <button
-              onClick={() => removeFromCart(index)}
-              className="ml-auto text-red-600"
-            >
-              Remove
-            </button>
+        <Card>
+          <div className="flex justify-between font-bold mb-6">
+            <span>Total</span>
+            <span>₹ {total}</span>
           </div>
 
-          <p className="font-semibold">
-            ₹ {item.price * item.quantity}
-          </p>
-        </div>
-      ))}
-
-      <hr />
-
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Total</h2>
-        <h2 className="text-xl font-bold">₹ {total}</h2>
+          <Button className="w-full" onClick={() => navigate("/checkout")}>
+            Proceed to Checkout
+          </Button>
+        </Card>
       </div>
-
-      <button
-        onClick={() => navigate("/checkout")}
-        className="bg-black text-white px-4 py-2 w-full"
-      >
-        Proceed to Checkout
-      </button>
-    </div>
+    </Container>
   );
 }

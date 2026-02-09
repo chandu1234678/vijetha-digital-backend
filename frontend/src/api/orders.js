@@ -1,14 +1,17 @@
-// src/api/orders.js
 import api from "./axios";
 
-// Create order (already used)
-export const placeOrder = async (order) => {
-  const res = await api.post("/orders", order);
+/**
+ * Create a new order
+ */
+export async function placeOrder(payload) {
+  const res = await api.post("/orders", payload);
   return res.data;
-};
+}
 
-// Get customer orders
-export const getMyOrders = async () => {
+/**
+ * Get logged-in user's orders
+ */
+export async function getMyOrders() {
   const res = await api.get("/orders");
   return res.data;
-};
+}
