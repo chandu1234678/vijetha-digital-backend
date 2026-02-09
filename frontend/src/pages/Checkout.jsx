@@ -9,6 +9,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { placeOrder } from "../api/orders";
 import { createPayment } from "../api/payments";
+import { formatPrice } from "../utils/format";
 
 export default function Checkout() {
   const { items, cartLoaded, total, clearCart } = useCart();
@@ -24,18 +25,17 @@ export default function Checkout() {
 
   if (authLoading || !cartLoaded) return <p>Loading…</p>;
 
-  const gst = Math.round(total * 0.18);
+  const gst = total * 0.18;
   const grandTotal = total + gst;
 
   const handlePayment = async () => {
     try {
       setPaying(true);
 
-      // ✅ CORRECT payload for FastAPI OrderCreate
       const orderPayload = {
         items: items.map((i) => ({
-          width_ft: i.config.width / 12,   // inches → feet
-          height_ft: i.config.height / 12, // inches → feet
+          width_ft: i.config.width / 12,
+          height_ft: i.config.height / 12,
           material: i.config.material,
           quantity: i.quantity,
           lamination: false,
@@ -48,7 +48,7 @@ export default function Checkout() {
 
       const rzp = new window.Razorpay({
         key: payment.key,
-        amount: payment.amount * 100, // Razorpay expects paise
+        amount: payment.amount * 100,
         currency: "INR",
         order_id: payment.razorpay_order_id,
         name: "Vijetha Digital",
@@ -81,7 +81,7 @@ export default function Checkout() {
                   </p>
                 </div>
                 <span className="font-bold">
-                  ₹ {i.unit_price * i.quantity}
+                  ₹ {formatPrice(i.unit_price * i.quantity)}
                 </span>
               </div>
             </Card>
@@ -92,15 +92,15 @@ export default function Checkout() {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>₹ {total}</span>
+              <span>₹ {formatPrice(total)}</span>
             </div>
             <div className="flex justify-between">
               <span>GST</span>
-              <span>₹ {gst}</span>
+              <span>₹ {formatPrice(gst)}</span>
             </div>
             <div className="flex justify-between font-bold border-t pt-2">
               <span>Total</span>
-              <span>₹ {grandTotal}</span>
+              <span>₹ {formatPrice(grandTotal)}</span>
             </div>
           </div>
 
