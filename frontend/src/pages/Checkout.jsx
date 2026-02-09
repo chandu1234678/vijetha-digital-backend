@@ -31,14 +31,15 @@ export default function Checkout() {
     try {
       setPaying(true);
 
+      // ✅ CORRECT payload for FastAPI OrderCreate
       const orderPayload = {
         items: items.map((i) => ({
-          product_id: i.product_id,
-          width: i.config.width,
-          height: i.config.height,
+          width_ft: i.config.width / 12,   // inches → feet
+          height_ft: i.config.height / 12, // inches → feet
           material: i.config.material,
           quantity: i.quantity,
-          unit_price: i.unit_price,
+          lamination: false,
+          frame: false,
         })),
       };
 
@@ -47,9 +48,9 @@ export default function Checkout() {
 
       const rzp = new window.Razorpay({
         key: payment.key,
-        amount: payment.amount,
+        amount: payment.amount * 100, // Razorpay expects paise
         currency: "INR",
-        order_id: payment.order_id,
+        order_id: payment.razorpay_order_id,
         name: "Vijetha Digital",
         handler: () => {
           clearCart();
@@ -58,8 +59,8 @@ export default function Checkout() {
       });
 
       rzp.open();
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
       alert("Payment failed");
     } finally {
       setPaying(false);
