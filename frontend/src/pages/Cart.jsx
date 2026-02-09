@@ -1,8 +1,16 @@
+// src/pages/Cart.jsx
+
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Cart() {
-  const { items, updateQuantity, removeItem, total } = useCart();
+  const {
+    items,
+    updateQuantity,
+    removeFromCart,
+    total,
+  } = useCart();
+
   const navigate = useNavigate();
 
   if (items.length === 0) {
@@ -19,8 +27,6 @@ export default function Cart() {
 
       {items.map((item, index) => (
         <div key={index} className="border p-4 rounded space-y-2">
-          <h2 className="font-semibold">{item.name}</h2>
-
           <p>
             Size: {item.config.width} × {item.config.height} inches
           </p>
@@ -28,7 +34,9 @@ export default function Cart() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => updateQuantity(index, item.quantity - 1)}
+              onClick={() =>
+                updateQuantity(index, item.quantity - 1)
+              }
               className="border px-2"
             >
               -
@@ -37,14 +45,16 @@ export default function Cart() {
             <span>{item.quantity}</span>
 
             <button
-              onClick={() => updateQuantity(index, item.quantity + 1)}
+              onClick={() =>
+                updateQuantity(index, item.quantity + 1)
+              }
               className="border px-2"
             >
               +
             </button>
 
             <button
-              onClick={() => removeItem(index)}
+              onClick={() => removeFromCart(index)}
               className="ml-auto text-red-600"
             >
               Remove

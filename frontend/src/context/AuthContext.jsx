@@ -13,12 +13,9 @@ export function AuthProvider({ children }) {
   const navigate = useNavigate();
 
   // ======================
-  // Restore session
+  // Restore session ONCE
   // ======================
   useEffect(() => {
-    // enforce single token key
-    localStorage.removeItem("access_token");
-
     const token = localStorage.getItem("token");
 
     if (token) {
@@ -28,7 +25,8 @@ export function AuthProvider({ children }) {
           email: decoded.sub,
           role: decoded.role,
         });
-      } catch {
+      } catch (err) {
+        console.error("Invalid token", err);
         localStorage.removeItem("token");
         setUser(null);
       }
@@ -38,7 +36,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   // ======================
-  // Login (intent-aware)
+  // Login
   // ======================
   const login = async (email, password, redirectTo = "/") => {
     const res = await api.post("/auth/login", { email, password });
@@ -55,7 +53,6 @@ export function AuthProvider({ children }) {
 
     setUser(userData);
 
-    // admin NEVER resumes customer flow
     if (userData.role === "admin") {
       navigate("/admin/dashboard", { replace: true });
     } else {
