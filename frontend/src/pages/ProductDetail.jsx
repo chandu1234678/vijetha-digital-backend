@@ -30,8 +30,13 @@ export default function ProductDetail() {
     height: "",
     material: "flex",
     quantity: 1,
+    lamination: false,
+    frame: false,
   });
 
+  // ======================
+  // Fetch product
+  // ======================
   useEffect(() => {
     getProducts()
       .then((list) => {
@@ -43,6 +48,24 @@ export default function ProductDetail() {
       .catch(console.error);
   }, [id]);
 
+  // ======================
+  // Reset extras when material doesn't support them
+  // ======================
+  useEffect(() => {
+    const noExtrasMaterials = ["flex", "star_flex", "eco_flex"];
+
+    if (noExtrasMaterials.includes(config.material)) {
+      setConfig((prev) => ({
+        ...prev,
+        lamination: false,
+        frame: false,
+      }));
+    }
+  }, [config.material]);
+
+  // ======================
+  // Price calculation
+  // ======================
   useEffect(() => {
     const width = Number(config.width);
     const height = Number(config.height);
@@ -61,13 +84,38 @@ export default function ProductDetail() {
       material: config.material,
       quantity,
     })
-      .then((res) => setPrice(Number(res.total_price)))
+      .then((res) => {
+        let total = Number(res.total_price);
+
+        const area =
+          (width / 12) * (height / 12);
+
+        // Extras only if allowed
+        if (config.lamination) {
+          total += area * 10 * quantity;
+        }
+
+        if (config.frame) {
+          total += 50;
+        }
+
+        setPrice(total);
+      })
       .catch(() => setPrice(0))
       .finally(() => setLoadingPrice(false));
   }, [config]);
 
-  if (!product) return <p className="p-6">Loading product…</p>;
+  if (!product) {
+    return <p className="p-6">Loading product…</p>;
+  }
 
+  const extrasAllowed = !["flex", "star_flex", "eco_flex"].includes(
+    config.material
+  );
+
+  // ======================
+  // Add to cart
+  // ======================
   const handleAddToCart = () => {
     if (!user) return navigate("/login");
     if (price <= 0) return alert("Invalid dimensions");
@@ -82,6 +130,8 @@ export default function ProductDetail() {
         width: Number(config.width),
         height: Number(config.height),
         material: config.material,
+        lamination: config.lamination,
+        frame: config.frame,
       },
     });
 
@@ -90,6 +140,7 @@ export default function ProductDetail() {
 
   return (
     <Container>
+      {/* Breadcrumb */}
       <div className="py-6 text-sm text-gray-500 space-x-1">
         <Link to="/" className="hover:underline text-gray-700">Home</Link>
         <span>/</span>
@@ -107,17 +158,26 @@ export default function ProductDetail() {
             <p className="text-gray-600">{product.category}</p>
           </div>
 
+          {/* Customisation */}
           <Card>
             <h2 className="font-semibold mb-4">Customise</h2>
 
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Width (inches)" type="number"
+              <Input
+                label="Width (inches)"
+                type="number"
                 value={config.width}
-                onChange={(e) => setConfig({ ...config, width: e.target.value })}
+                onChange={(e) =>
+                  setConfig({ ...config, width: e.target.value })
+                }
               />
-              <Input label="Height (inches)" type="number"
+              <Input
+                label="Height (inches)"
+                type="number"
                 value={config.height}
-                onChange={(e) => setConfig({ ...config, height: e.target.value })}
+                onChange={(e) =>
+                  setConfig({ ...config, height: e.target.value })
+                }
               />
             </div>
 
@@ -142,10 +202,52 @@ export default function ProductDetail() {
                 setConfig({ ...config, quantity: e.target.value })
               }
             />
+
+            {/* Extras */}
+            {!extrasAllowed && (
+              <p className="text-sm text-gray-500 mt-4">
+                Lamination and frame are not available for flex banners.
+              </p>
+            )}
+
+            {extrasAllowed && (
+              <div className="flex items-center space-x-6 mt-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={config.lamination}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        lamination: e.target.checked,
+                      })
+                    }
+                  />
+                  <span>Lamination (+₹10 / sq ft)</span>
+                </label>
+
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={config.frame}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        frame: e.target.checked,
+                      })
+                    }
+                  />
+                  <span>Frame (+₹50 flat)</span>
+                </label>
+              </div>
+            )}
           </Card>
 
+          {/* Price */}
           <Card>
-            <p className="text-sm text-gray-500">Estimated Total Price</p>
+            <p className="text-sm text-gray-500">
+              Estimated Total Price
+            </p>
             <p className="text-3xl font-bold">
               ₹ {loadingPrice ? "…" : formatPrice(price)}
             </p>

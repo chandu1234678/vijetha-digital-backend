@@ -32,14 +32,15 @@ export default function Checkout() {
     try {
       setPaying(true);
 
+      // ✅ SEND REAL EXTRAS TO BACKEND
       const orderPayload = {
         items: items.map((i) => ({
           width_ft: i.config.width / 12,
           height_ft: i.config.height / 12,
           material: i.config.material,
           quantity: i.quantity,
-          lamination: false,
-          frame: false,
+          lamination: !!i.config.lamination,
+          frame: !!i.config.frame,
         })),
       };
 
@@ -70,16 +71,21 @@ export default function Checkout() {
   return (
     <Container>
       <div className="py-12 max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
           {items.map((i, idx) => (
             <Card key={idx}>
               <div className="flex justify-between">
                 <div>
                   <p className="font-semibold">{i.name}</p>
+
                   <p className="text-sm text-gray-600">
                     {i.config.width}" × {i.config.height}" · {i.config.material}
+                    {i.config.lamination && " · Lamination"}
+                    {i.config.frame && " · Frame"}
                   </p>
                 </div>
+
                 <span className="font-bold">
                   ₹ {formatPrice(i.unit_price * i.quantity)}
                 </span>
@@ -88,16 +94,19 @@ export default function Checkout() {
           ))}
         </div>
 
+        {/* Summary */}
         <Card>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Subtotal</span>
               <span>₹ {formatPrice(total)}</span>
             </div>
+
             <div className="flex justify-between">
-              <span>GST</span>
+              <span>GST (18%)</span>
               <span>₹ {formatPrice(gst)}</span>
             </div>
+
             <div className="flex justify-between font-bold border-t pt-2">
               <span>Total</span>
               <span>₹ {formatPrice(grandTotal)}</span>
