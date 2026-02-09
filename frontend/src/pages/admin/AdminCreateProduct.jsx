@@ -3,6 +3,7 @@ import Container from "../../components/layout/Container";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
+import api from "../../api/axios";
 
 export default function AdminCreateProduct() {
   const [product, setProduct] = useState({
@@ -10,20 +11,31 @@ export default function AdminCreateProduct() {
     category: "",
     base_price: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
 
     if (!product.name || !product.category || !product.base_price) {
-      alert("Fill all fields");
+      alert("All fields required");
       return;
     }
 
-    // DEMO MODE (replace with backend later)
-    console.log("New Product:", product);
-    alert("Product created (demo mode)");
+    try {
+      setLoading(true);
+      await api.post("/admin/products", {
+        name: product.name,
+        category: product.category,
+        base_price: Number(product.base_price),
+      });
 
-    setProduct({ name: "", category: "", base_price: "" });
+      alert("Product created successfully");
+      setProduct({ name: "", category: "", base_price: "" });
+    } catch (e) {
+      alert("Failed to create product");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,7 +46,7 @@ export default function AdminCreateProduct() {
             Add New Product
           </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={submit} className="space-y-4">
             <Input
               label="Product Name"
               value={product.name}
@@ -52,16 +64,23 @@ export default function AdminCreateProduct() {
             />
 
             <Input
-              label="Base Price (₹ per sq ft)"
+              label="Base Price (₹ / sq ft)"
               type="number"
               value={product.base_price}
               onChange={(e) =>
-                setProduct({ ...product, base_price: e.target.value })
+                setProduct({
+                  ...product,
+                  base_price: e.target.value,
+                })
               }
             />
 
-            <Button type="submit" className="w-full">
-              Create Product
+            <Button
+              className="w-full"
+              disabled={loading}
+              type="submit"
+            >
+              {loading ? "Creating…" : "Create Product"}
             </Button>
           </form>
         </Card>

@@ -25,11 +25,12 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminOrders from "./pages/admin/Orders";
 import AdminMaterials from "./pages/admin/Materials";
 import AdminExtras from "./pages/admin/Extras";
+import AdminProducts from "./pages/admin/Products";
+import AdminCreateProduct from "./pages/admin/AdminCreateProduct";
 
 export default function App() {
   return (
     <Routes>
-
       {/* ================= PUBLIC ================= */}
       <Route element={<PublicLayout />}>
         <Route path="/login" element={<Login />} />
@@ -43,7 +44,7 @@ export default function App() {
         <Route path="/cart" element={<Cart />} />
       </Route>
 
-      {/* ======== CUSTOMER AUTH REQUIRED ========= */}
+      {/* ======== CUSTOMER (LOGIN REQUIRED) ======== */}
       <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
         <Route element={<CustomerLayout />}>
           <Route path="/checkout" element={<Checkout />} />
@@ -52,12 +53,14 @@ export default function App() {
       </Route>
 
       {/* ============ ADMIN ONLY ============ */}
-      <Route element={<AdminRoute />}>
+      <Route element={<AdminRoute allowedRoles={["admin"]} />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/materials" element={<AdminMaterials />} />
           <Route path="/admin/extras" element={<AdminExtras />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/products/new" element={<AdminCreateProduct />} />
         </Route>
       </Route>
 
@@ -66,3 +69,4 @@ export default function App() {
     </Routes>
   );
 }
+  

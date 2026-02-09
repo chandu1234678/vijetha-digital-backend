@@ -39,3 +39,19 @@ export const addExtra = async (data) => {
   const res = await api.post("/admin/extras", data);
   return res.data;
 };
+
+// ---------- PRODUCTS ----------
+export const getAdminProducts = async () => {
+  const res = await api.get("/products");
+  return res.data;
+};
+
+export const createProduct = async (data) => {
+  const res = await api.post("/admin/products", data);
+  return res.data;
+};
+
+export const deleteProduct = async (productId) => {
+  const res = await api.delete(`/admin/products/${productId}`);
+  return res.data;
+};

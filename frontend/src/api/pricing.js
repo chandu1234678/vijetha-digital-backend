@@ -1,4 +1,3 @@
-// src/api/pricing.js
 import api from "./axios";
 
 export const calculatePrice = async (payload) => {
