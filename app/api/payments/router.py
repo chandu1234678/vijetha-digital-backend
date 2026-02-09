@@ -1,11 +1,12 @@
+# app/api/payments/router.py
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.auth.dependencies import get_current_user, get_db
+from app.api.auth.dependencies import get_current_user
+from app.db.session import get_db
 from app.services.payment_service import create_payment_order
 
 router = APIRouter(prefix="/payments", tags=["payments"])
-
 
 @router.post("/create/{order_id}")
 def initiate_payment(
