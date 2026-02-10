@@ -1,4 +1,3 @@
-# app/services/payment_service.py
 import razorpay
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -11,6 +10,7 @@ client = razorpay.Client(
 )
 
 MIN_RAZORPAY_AMOUNT = 1  # INR
+
 
 def create_payment_order(
     db: Session,
@@ -30,7 +30,7 @@ def create_payment_order(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    # 2️⃣ Validate order state
+    # 2️⃣ Validate state
     if order.status == "paid":
         raise HTTPException(status_code=400, detail="Order already paid")
 
@@ -54,17 +54,16 @@ def create_payment_order(
             detail=f"Payment gateway error: {str(e)}",
         )
 
-    # 4️⃣ Update status → payment_initiated
+    # 4️⃣ Update order status
     order.status = "payment_initiated"
     db.commit()
     db.refresh(order)
 
-    # 5️⃣ Return frontend-ready payload
+    # 5️⃣ Frontend payload
     return {
         "order_id": order.id,
         "razorpay_order_id": razorpay_order["id"],
-        "amount": order.total_price,
+        "amount": int(order.total_price * 100),  # paise
         "currency": "INR",
-        "status": order.status,
         "key": settings.RAZORPAY_KEY_ID,
     }

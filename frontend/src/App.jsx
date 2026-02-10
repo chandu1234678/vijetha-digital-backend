@@ -53,14 +53,17 @@ export default function App() {
       </Route>
 
       {/* ============ ADMIN ONLY ============ */}
-      <Route element={<AdminRoute allowedRoles={["admin"]} />}>
+      <Route element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
           <Route path="/admin/materials" element={<AdminMaterials />} />
           <Route path="/admin/extras" element={<AdminExtras />} />
           <Route path="/admin/products" element={<AdminProducts />} />
-          <Route path="/admin/products/new" element={<AdminCreateProduct />} />
+          <Route
+            path="/admin/products/new"
+            element={<AdminCreateProduct />}
+          />
         </Route>
       </Route>
 
@@ -69,4 +72,3 @@ export default function App() {
     </Routes>
   );
 }
-  

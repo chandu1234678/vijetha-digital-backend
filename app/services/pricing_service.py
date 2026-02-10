@@ -14,18 +14,17 @@ def calculate_price(
 ):
     """
     Production-grade pricing engine
-    - Single source of truth: MaterialRate.rate_per_sqft
-    - Backend-only price calculation
+    - Material: price per sqft
+    - Extras: flat price per item
     - Quantity applied exactly once
     """
 
-    # 1️⃣ Area calculation
+    # 1️⃣ Area
     area = width_ft * height_ft
-
     if area <= 0 or quantity <= 0:
         raise ValueError("Invalid dimensions or quantity")
 
-    # 2️⃣ Fetch material rate
+    # 2️⃣ Material rate (single source of truth)
     material_rate = (
         db.query(MaterialRate)
         .filter(MaterialRate.name == material)
@@ -35,31 +34,22 @@ def calculate_price(
     if not material_rate:
         raise ValueError("Material rate not configured")
 
-    # 3️⃣ Base unit price
     base_unit_price = area * material_rate.rate_per_sqft
 
-    # 4️⃣ Extras (future-safe)
+    # 3️⃣ Extras (flat price)
     extras_unit_price = 0.0
 
     if lamination:
-        extra = (
-            db.query(ExtraRate)
-            .filter(ExtraRate.name == "lamination")
-            .first()
-        )
+        extra = db.query(ExtraRate).filter(ExtraRate.name == "lamination").first()
         if extra:
-            extras_unit_price += area * extra.rate_per_sqft
+            extras_unit_price += extra.price
 
     if frame:
-        extra = (
-            db.query(ExtraRate)
-            .filter(ExtraRate.name == "frame")
-            .first()
-        )
+        extra = db.query(ExtraRate).filter(ExtraRate.name == "frame").first()
         if extra:
-            extras_unit_price += extra.rate_per_sqft
+            extras_unit_price += extra.price
 
-    # 5️⃣ Final prices
+    # 4️⃣ Final price
     unit_price = base_unit_price + extras_unit_price
     total_price = unit_price * quantity
 

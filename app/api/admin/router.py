@@ -99,6 +99,7 @@ def delete_material(
     material = db.query(MaterialRate).get(material_id)
     if not material:
         raise HTTPException(status_code=404, detail="Material not found")
+
     db.delete(material)
     db.commit()
     return {"message": "Deleted"}
@@ -130,6 +131,7 @@ def delete_extra(
     extra = db.query(ExtraRate).get(extra_id)
     if not extra:
         raise HTTPException(status_code=404, detail="Extra not found")
+
     db.delete(extra)
     db.commit()
     return {"message": "Deleted"}
