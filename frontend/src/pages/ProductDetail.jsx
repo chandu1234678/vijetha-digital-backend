@@ -13,7 +13,6 @@ import Select from "../components/ui/Select";
 import ImageGallery from "../components/product/ImageGallery";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { formatPrice } from "../utils/format";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -22,7 +21,10 @@ export default function ProductDetail() {
   const { user } = useAuth();
 
   const [product, setProduct] = useState(null);
-  const [price, setPrice] = useState(0);
+  const [pricing, setPricing] = useState({
+    unit_price: 0,
+    total_price: 0,
+  });
   const [loadingPrice, setLoadingPrice] = useState(false);
 
   const [config, setConfig] = useState({
@@ -30,13 +32,9 @@ export default function ProductDetail() {
     height: "",
     material: "flex",
     quantity: 1,
-    lamination: false,
-    frame: false,
   });
 
-  // ======================
-  // Fetch product
-  // ======================
+  /* ================= FETCH PRODUCT ================= */
   useEffect(() => {
     getProducts()
       .then((list) => {
@@ -48,31 +46,14 @@ export default function ProductDetail() {
       .catch(console.error);
   }, [id]);
 
-  // ======================
-  // Reset extras when material doesn't support them
-  // ======================
-  useEffect(() => {
-    const noExtrasMaterials = ["flex", "star_flex", "eco_flex"];
-
-    if (noExtrasMaterials.includes(config.material)) {
-      setConfig((prev) => ({
-        ...prev,
-        lamination: false,
-        frame: false,
-      }));
-    }
-  }, [config.material]);
-
-  // ======================
-  // Price calculation
-  // ======================
+  /* ================= PRICE CALCULATION (BACKEND ONLY) ================= */
   useEffect(() => {
     const width = Number(config.width);
     const height = Number(config.height);
     const quantity = Number(config.quantity);
 
     if (!width || !height || quantity < 1) {
-      setPrice(0);
+      setPricing({ unit_price: 0, total_price: 0 });
       return;
     }
 
@@ -83,25 +64,18 @@ export default function ProductDetail() {
       height_ft: height / 12,
       material: config.material,
       quantity,
+      lamination: false,
+      frame: false,
     })
       .then((res) => {
-        let total = Number(res.total_price);
-
-        const area =
-          (width / 12) * (height / 12);
-
-        // Extras only if allowed
-        if (config.lamination) {
-          total += area * 10 * quantity;
-        }
-
-        if (config.frame) {
-          total += 50;
-        }
-
-        setPrice(total);
+        setPricing({
+          unit_price: Number(res.unit_price),
+          total_price: Number(res.total_price),
+        });
       })
-      .catch(() => setPrice(0))
+      .catch(() => {
+        setPricing({ unit_price: 0, total_price: 0 });
+      })
       .finally(() => setLoadingPrice(false));
   }, [config]);
 
@@ -109,29 +83,28 @@ export default function ProductDetail() {
     return <p className="p-6">Loading product…</p>;
   }
 
-  const extrasAllowed = !["flex", "star_flex", "eco_flex"].includes(
-    config.material
-  );
-
-  // ======================
-  // Add to cart
-  // ======================
+  /* ================= ADD TO CART ================= */
   const handleAddToCart = () => {
-    if (!user) return navigate("/login");
-    if (price <= 0) return alert("Invalid dimensions");
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (pricing.unit_price <= 0) {
+      alert("Please enter valid dimensions");
+      return;
+    }
 
     addToCart({
       product_id: product.id,
       name: product.name,
       category: product.category,
-      unit_price: price,
+      unit_price: pricing.unit_price, // ✅ SINGLE SOURCE
       quantity: Number(config.quantity),
       config: {
         width: Number(config.width),
         height: Number(config.height),
         material: config.material,
-        lamination: config.lamination,
-        frame: config.frame,
       },
     });
 
@@ -140,27 +113,40 @@ export default function ProductDetail() {
 
   return (
     <Container>
-      {/* Breadcrumb */}
+      {/* ================= BREADCRUMB ================= */}
       <div className="py-6 text-sm text-gray-500 space-x-1">
-        <Link to="/" className="hover:underline text-gray-700">Home</Link>
+        <Link to="/" className="hover:underline text-gray-700">
+          Home
+        </Link>
         <span>/</span>
-        <Link to="/products" className="hover:underline text-gray-700">Products</Link>
+        <Link to="/products" className="hover:underline text-gray-700">
+          Products
+        </Link>
         <span>/</span>
-        <span className="text-gray-900 font-medium">{product.name}</span>
+        <span className="text-gray-900 font-medium">
+          {product.name}
+        </span>
       </div>
 
+      {/* ================= MAIN ================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <ImageGallery />
 
         <div className="space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">{product.name}</h1>
-            <p className="text-gray-600">{product.category}</p>
+            <h1 className="text-3xl font-bold">
+              {product.name}
+            </h1>
+            <p className="text-gray-600">
+              {product.category}
+            </p>
           </div>
 
-          {/* Customisation */}
+          {/* ================= CUSTOMISE ================= */}
           <Card>
-            <h2 className="font-semibold mb-4">Customise</h2>
+            <h2 className="font-semibold mb-4">
+              Customise
+            </h2>
 
             <div className="grid grid-cols-2 gap-4">
               <Input
@@ -171,6 +157,7 @@ export default function ProductDetail() {
                   setConfig({ ...config, width: e.target.value })
                 }
               />
+
               <Input
                 label="Height (inches)"
                 type="number"
@@ -202,57 +189,22 @@ export default function ProductDetail() {
                 setConfig({ ...config, quantity: e.target.value })
               }
             />
-
-            {/* Extras */}
-            {!extrasAllowed && (
-              <p className="text-sm text-gray-500 mt-4">
-                Lamination and frame are not available for flex banners.
-              </p>
-            )}
-
-            {extrasAllowed && (
-              <div className="flex items-center space-x-6 mt-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={config.lamination}
-                    onChange={(e) =>
-                      setConfig({
-                        ...config,
-                        lamination: e.target.checked,
-                      })
-                    }
-                  />
-                  <span>Lamination (+₹10 / sq ft)</span>
-                </label>
-
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={config.frame}
-                    onChange={(e) =>
-                      setConfig({
-                        ...config,
-                        frame: e.target.checked,
-                      })
-                    }
-                  />
-                  <span>Frame (+₹50 flat)</span>
-                </label>
-              </div>
-            )}
           </Card>
 
-          {/* Price */}
+          {/* ================= PRICE ================= */}
           <Card>
             <p className="text-sm text-gray-500">
               Estimated Total Price
             </p>
+
             <p className="text-3xl font-bold">
-              ₹ {loadingPrice ? "…" : formatPrice(price)}
+              ₹ {loadingPrice ? "…" : pricing.total_price}
             </p>
 
-            <Button className="w-full mt-4" onClick={handleAddToCart}>
+            <Button
+              className="w-full mt-4"
+              onClick={handleAddToCart}
+            >
               Add to Cart
             </Button>
           </Card>
