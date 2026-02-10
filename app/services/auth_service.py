@@ -12,14 +12,25 @@ from app.core.config import settings
 
 
 def register_user(db: Session, data: RegisterRequest):
-    existing = db.query(User).filter(User.email == data.email).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="User already exists")
+    # normalize email
+    email = data.email.strip().lower()
 
-    role = "admin" if data.email == settings.ADMIN_EMAIL else "customer"
+    # check existing user
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="User already exists"
+        )
+
+    # 🔒 STRICT admin rule (ONE EMAIL ONLY)
+    if email == settings.ADMIN_EMAIL.strip().lower():
+        role = "admin"
+    else:
+        role = "customer"
 
     user = User(
-        email=data.email,
+        email=email,
         password=hash_password(data.password),
         role=role,
     )
@@ -28,19 +39,25 @@ def register_user(db: Session, data: RegisterRequest):
     db.commit()
     db.refresh(user)
 
-    return {
-        "message": "User registered successfully"
-    }
+    return {"message": "User registered successfully"}
 
 
 def login_user(db: Session, data: LoginRequest):
-    user = db.query(User).filter(User.email == data.email).first()
+    email = data.email.strip().lower()
+
+    user = db.query(User).filter(User.email == email).first()
 
     if not user or not verify_password(data.password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
 
     access_token = create_access_token(
-        {"sub": user.email, "role": user.role}
+        {
+            "sub": user.email,
+            "role": user.role,
+        }
     )
 
     return {

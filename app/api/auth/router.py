@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -15,31 +15,31 @@ from app.services.password_reset_service import (
     request_password_reset,
     reset_password,
 )
+from app.core.rate_limiter import limiter
 
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
 )
 
-
 # =========================
 # AUTH
 # =========================
 
 @router.post("/register")
+@limiter.limit("3/minute")
 def register(
+    request: Request,  # ✅ REQUIRED FOR SLOWAPI
     data: RegisterRequest,
     db: Session = Depends(get_db),
 ):
-    """
-    Create a new customer account
-    Role is enforced inside auth_service
-    """
     return register_user(db, data)
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("5/minute")
 def login(
+    request: Request,  # ✅ REQUIRED
     data: LoginRequest,
     db: Session = Depends(get_db),
 ):
@@ -51,14 +51,12 @@ def login(
 # =========================
 
 @router.post("/forgot-password")
+@limiter.limit("2/minute")
 def forgot_password(
+    request: Request,  # ✅ REQUIRED
     data: dict,
     db: Session = Depends(get_db),
 ):
-    """
-    Send password reset email if user exists.
-    Always return success (security reason).
-    """
     email = data.get("email")
     if not email:
         raise HTTPException(status_code=400, detail="Email is required")
@@ -71,13 +69,12 @@ def forgot_password(
 
 
 @router.post("/reset-password")
+@limiter.limit("3/minute")
 def reset_user_password(
+    request: Request,  # ✅ REQUIRED
     data: dict,
     db: Session = Depends(get_db),
 ):
-    """
-    Reset password using token
-    """
     token = data.get("token")
     new_password = data.get("new_password")
 

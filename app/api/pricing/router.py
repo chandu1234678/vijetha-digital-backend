@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.schemas.pricing import PriceRequest, PriceResponse
 from app.services.pricing_service import calculate_price
 from app.db.session import get_db
+from app.core.rate_limiter import limiter
 
 router = APIRouter(
     prefix="/pricing",
@@ -12,17 +13,12 @@ router = APIRouter(
 
 
 @router.post("/calculate", response_model=PriceResponse)
+@limiter.limit("30/minute")
 def calculate_pricing(
+    request: Request,  # ✅ REQUIRED
     data: PriceRequest,
     db: Session = Depends(get_db),
 ):
-    """
-    Production-grade pricing endpoint
-
-    - Uses MaterialRate as SINGLE source of truth
-    - Frontend sends only dimensions & options
-    - Backend calculates everything
-    """
     try:
         result = calculate_price(
             db=db,
