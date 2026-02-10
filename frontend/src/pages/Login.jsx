@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
@@ -10,7 +10,6 @@ export default function Login() {
   const { login } = useAuth();
   const location = useLocation();
 
-  // where the user wanted to go before login
   const redirectTo = location.state?.from || "/";
 
   const handleSubmit = async (e) => {
@@ -18,7 +17,7 @@ export default function Login() {
     try {
       await login(email, password, redirectTo);
     } catch {
-      alert("Invalid login");
+      alert("Invalid email or password");
     }
   };
 
@@ -46,6 +45,13 @@ export default function Login() {
           Login
         </button>
       </form>
+
+      <p className="text-sm text-center mt-4">
+        Don’t have an account?{" "}
+        <Link to="/register" className="underline">
+          Create one
+        </Link>
+      </p>
     </div>
   );
 }

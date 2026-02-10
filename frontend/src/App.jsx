@@ -1,3 +1,4 @@
+// src/App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 
 /* layouts */
@@ -11,6 +12,7 @@ import AdminRoute from "./components/auth/AdminRoute";
 
 /* public pages */
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -34,6 +36,7 @@ export default function App() {
       {/* ================= PUBLIC ================= */}
       <Route element={<PublicLayout />}>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
       </Route>
 
       {/* ========== PUBLIC SHOP (NO LOGIN) ========= */}
@@ -60,10 +63,7 @@ export default function App() {
           <Route path="/admin/materials" element={<AdminMaterials />} />
           <Route path="/admin/extras" element={<AdminExtras />} />
           <Route path="/admin/products" element={<AdminProducts />} />
-          <Route
-            path="/admin/products/new"
-            element={<AdminCreateProduct />}
-          />
+          <Route path="/admin/products/new" element={<AdminCreateProduct />} />
         </Route>
       </Route>
 
