@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.services.email_service import send_email
+from app.core.security import hash_password
 
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 
@@ -46,7 +47,9 @@ def reset_password(db: Session, token: str, new_password: str):
     if not user:
         raise ValueError("Invalid or expired token")
 
-    user.password = new_password
+    # ✅ bcrypt hash applied
+    user.password = hash_password(new_password)
+
     user.reset_token = None
     user.reset_token_expiry = None
 
