@@ -1,11 +1,7 @@
-// frontend/src/api/auth.js
 import api from "./axios";
 
 export const login = async (email, password) => {
-  const res = await api.post("/auth/login", {
-    email,
-    password,
-  });
+  const res = await api.post("/auth/login", { email, password });
   return res.data;
 };
 
@@ -16,4 +12,15 @@ export const register = async (name, email, password) => {
     password,
   });
   return res.data;
+};
+
+export const forgotPassword = async (email) => {
+  return api.post("/auth/forgot-password", { email });
+};
+
+export const resetPassword = async (token, newPassword) => {
+  return api.post("/auth/reset-password", {
+    token,
+    new_password: newPassword,
+  });
 };

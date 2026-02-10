@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -9,7 +8,6 @@ export default function Login() {
 
   const { login } = useAuth();
   const location = useLocation();
-
   const redirectTo = location.state?.from || "/";
 
   const handleSubmit = async (e) => {
@@ -23,14 +21,15 @@ export default function Login() {
 
   return (
     <div className="p-10 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
+      <h1 className="text-2xl font-bold mb-6">Login</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           className="border p-2 w-full"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
 
         <input
@@ -39,6 +38,7 @@ export default function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
 
         <button className="bg-black text-white px-4 py-2 w-full">
@@ -46,12 +46,15 @@ export default function Login() {
         </button>
       </form>
 
-      <p className="text-sm text-center mt-4">
-        Don’t have an account?{" "}
+      <div className="flex justify-between text-sm mt-4">
+        <Link to="/forgot-password" className="underline">
+          Forgot password?
+        </Link>
+
         <Link to="/register" className="underline">
           Create one
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

@@ -1,3 +1,10 @@
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Force-load backend .env (NOT frontend)
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(dotenv_path=BASE_DIR / ".env")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,6 +18,7 @@ from app.api.products.router import router as product_router
 from app.api.orders.router import router as order_router
 from app.api.pricing.router import router as pricing_router
 from app.api.payments.router import router as payment_router
+
 
 app = FastAPI(title=settings.APP_NAME)
 

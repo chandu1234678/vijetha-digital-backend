@@ -1,4 +1,3 @@
-// src/App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 
 /* layouts */
@@ -6,19 +5,21 @@ import PublicLayout from "./layouts/PublicLayout";
 import CustomerLayout from "./layouts/CustomerLayout";
 import AdminLayout from "./layouts/AdminLayout";
 
-/* route guards */
+/* guards */
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 
 /* public pages */
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 
-/* customer-only pages */
+/* customer pages */
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 
@@ -33,13 +34,15 @@ import AdminCreateProduct from "./pages/admin/AdminCreateProduct";
 export default function App() {
   return (
     <Routes>
-      {/* ================= PUBLIC ================= */}
+      {/* ===== PUBLIC ===== */}
       <Route element={<PublicLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
-      {/* ========== PUBLIC SHOP (NO LOGIN) ========= */}
+      {/* ===== PUBLIC SHOP ===== */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
@@ -47,7 +50,7 @@ export default function App() {
         <Route path="/cart" element={<Cart />} />
       </Route>
 
-      {/* ======== CUSTOMER (LOGIN REQUIRED) ======== */}
+      {/* ===== CUSTOMER ===== */}
       <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
         <Route element={<CustomerLayout />}>
           <Route path="/checkout" element={<Checkout />} />
@@ -55,7 +58,7 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* ============ ADMIN ONLY ============ */}
+      {/* ===== ADMIN ===== */}
       <Route element={<AdminRoute />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -67,7 +70,7 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* ============ FALLBACK ============ */}
+      {/* ===== FALLBACK ===== */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
