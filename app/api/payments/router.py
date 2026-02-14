@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.models.order import Order
 from app.core.config import settings
 from app.services.payment_service import create_payment_order
+from app.api.auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -18,15 +19,19 @@ razorpay_client = razorpay.Client(
 )
 
 # ======================================================
-# CREATE PAYMENT (FRONTEND CALLS THIS)
-# POST /payments/create/{order_id}
+# CREATE PAYMENT (SECURED)
 # ======================================================
 @router.post("/create/{order_id}")
 def create_payment(
     order_id: int,
     db: Session = Depends(get_db),
+    user=Depends(get_current_user),  # 🔒 AUTH REQUIRED
 ):
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = db.query(Order).filter(
+        Order.id == order_id,
+        Order.user_email == user["sub"],  # 🔒 OWNER CHECK
+    ).first()
+
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
@@ -39,7 +44,6 @@ def create_payment(
 
 # ======================================================
 # RAZORPAY WEBHOOK
-# POST /payments/webhook
 # ======================================================
 @router.post("/webhook")
 async def razorpay_webhook(
@@ -68,14 +72,15 @@ async def razorpay_webhook(
     if event != "payment.captured":
         return {"status": "ignored"}
 
-    # 2️⃣ Get payment entity
+    # 2️⃣ Extract payment entity
     payment_entity = payload["payload"]["payment"]["entity"]
     razorpay_order_id = payment_entity.get("order_id")
+    paid_amount = payment_entity.get("amount")  # amount in paise
 
     if not razorpay_order_id:
         return {"status": "razorpay_order_id_missing"}
 
-    # 3️⃣ Fetch Razorpay order to get receipt
+    # 3️⃣ Fetch Razorpay order
     try:
         rz_order = razorpay_client.order.fetch(razorpay_order_id)
     except Exception:
@@ -90,11 +95,17 @@ async def razorpay_webhook(
     except ValueError:
         return {"status": "invalid_order_id"}
 
-    # 4️⃣ Update DB order (IDEMPOTENT)
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         return {"status": "order_not_found"}
 
+    # 🔒 4️⃣ VERIFY AMOUNT MATCHES ORDER
+    expected_amount = int(order.total_price * 100) 
+
+    if paid_amount != expected_amount:
+        return {"status": "amount_mismatch"}
+
+    # 5️⃣ IDEMPOTENT UPDATE
     if order.status != "paid":
         order.status = "paid"
         db.commit()

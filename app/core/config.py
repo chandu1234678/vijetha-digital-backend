@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     # Database (MANDATORY)
     DATABASE_URL: str
 
+    # Frontend URL for CORS
+    FRONTEND_URL: str
+
     # JWT
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
